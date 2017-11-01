@@ -1,4 +1,5 @@
 const restify = require("restify");
+const lookup = require("./lookup");
 
 // init server
 const server = restify.createServer();
