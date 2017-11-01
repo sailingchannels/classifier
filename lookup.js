@@ -1,10 +1,12 @@
 const msgpack = require("msgpack");
 const fs = require("fs");
 
+// LOOKUP
 exports.Lookup = class {
-	constructor() {
+	constructor(name) {
 		this.dict = {};
-		this.inc = 1;
+		this.inc = 0;
+		this.name = name;
 	}
 
 	// ADD
@@ -22,7 +24,7 @@ exports.Lookup = class {
 	clear() {
 		// reset the whole lookup index
 		this.dict = {};
-		this.inc = 1;
+		this.inc = 0;
 	}
 
 	// GET
@@ -31,7 +33,7 @@ exports.Lookup = class {
 	}
 
 	// SAVE
-	save(filename, callback) {
+	save(callback) {
 		// create a messagepack buffer
 		var data = msgpack.pack({
 			dict: this.dict,
@@ -39,13 +41,13 @@ exports.Lookup = class {
 		});
 
 		// store the data into a filename
-		fs.writeFile(filename, data, callback);
+		fs.writeFile("lookup-" + this.name + ".dat", data, callback);
 	}
 
 	// LOAD
-	load(filename, callback) {
+	load(callback) {
 		// read the stored data file
-		fs.readFile(filename, (err, data) => {
+		fs.readFile("lookup-" + this.name + ".dat", (err, data) => {
 			if (err) return callback(err);
 
 			var d = msgpack.unpack(data);

@@ -4,8 +4,8 @@ const lookup = require("./lookup");
 // init server
 const server = restify.createServer();
 
-server.get("/hello/:name", (req, res, next) => {
-	res.send("hello " + req.params.name);
+server.post("/classify", (req, res, next) => {
+	res.send(req.body);
 	return next();
 });
 
