@@ -51,21 +51,25 @@ exports.Classifier = class {
 	// LOAD
 	load() {
 		// if stored version of the classifer exists, load this one
-		fs.readFile(this.name + "_classifier.msgpack.zip", (err, file) => {
-			// end function here, because file is not available,
-			// so we don't want to load anything further from that file
-			if (err || !file) return;
+		fs.readFile(
+			this.name + "_classifier.msgpack.zip",
+			"utf8",
+			(err, file) => {
+				// end function here, because file is not available,
+				// so we don't want to load anything further from that file
+				if (err || !file) return;
 
-			// unzip content
-			zlib.inflate(file, (err, unzipped) => {
-				if (err) throw "Could not unzip file";
+				// unzip content
+				zlib.inflate(file, (err, unzipped) => {
+					if (err) throw err;
 
-				// un-msgpack the content
-				const unmsgpacked = msgpack.unpack(unzipped);
+					// un-msgpack the content
+					const unmsgpacked = msgpack.unpack(unzipped);
 
-				this.classifier = bayes.fromJson(unmsgpacked);
-				this.classifier.tokenizer = new Tokenizer().tokenize;
-			});
-		});
+					this.classifier = bayes.fromJson(unmsgpacked);
+					this.classifier.tokenizer = new Tokenizer().tokenize;
+				});
+			}
+		);
 	}
 };
