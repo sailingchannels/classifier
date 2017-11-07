@@ -52,7 +52,7 @@ exports.Classifier = class {
 	load() {
 		// if stored version of the classifer exists, load this one
 		fs.readFile(this.name + "_classifier.msgpack.zip", (err, file) => {
-			if (err || !file) throw "File not found";
+			if (err || !file) return;
 
 			// unzip content
 			zlib.inflate(file, (err, unzipped) => {
