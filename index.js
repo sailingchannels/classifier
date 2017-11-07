@@ -1,11 +1,21 @@
 const restify = require("restify");
-const lookup = require("./lookup");
 
 // init server
 const server = restify.createServer();
 
-server.post("/classify", (req, res, next) => {
-	res.send(req.body);
+// LEARN
+server.post("/learn", (req, res, next) => {
+	if (!req.body || !req.body.text || !req.body.category) {
+		res.status(400);
+		return next();
+	}
+
+	res.send({ err: null });
+	return next();
+});
+
+// CATEGORIZE
+server.post("/categorize", (req, res, next) => {
 	return next();
 });
 

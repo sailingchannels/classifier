@@ -1,76 +1,63 @@
-const { Lookup } = require("./lookup");
-const { Tokenizer } = require("./tokenizer");
-const synaptic = require("synaptic");
 const msgpack = require("msgpack");
 const fs = require("fs");
+const bayes = require("bayes");
+const zlib = require("zlib");
 
-// use namespaces
-const Network = synaptic.Network;
-const Trainer = synaptic.Trainer;
-const Architect = synaptic.Architect;
+const { Tokenizer } = require("./tokenizer");
 
 // CLASSIFIER
 exports.Classifier = class {
-	constructor(name) {
-		this.lookup = new Lookup(name);
-		this.tokenizer = new Tokenizer();
+	// CONSTRUCTOR
+	constructor() {
+		this.classifier = bayes({
+			tokenizer: new Tokenizer().tokenize
+		});
 
-		this.name = name;
-		this.network = new Architect.Perceptron(20, 30, 2);
-		this.trainer = new Trainer(this.network);
+		// tries to load the classifier content from file
+		this.load();
 	}
 
-	// LOAD
-	load(callback) {
-		// read the stored data file
-		fs.readFile("classifier-" + this.name + ".dat", (err, data) => {
-			if (err) return callback(err);
+	// LEARN
+	learn(text, category) {
+		this.classifier.learn(text, category);
+	}
 
-			var raw = msgpack.unpack(data);
-
-			// load NN
-			this.network = Network.fromJSON(raw);
-
-			return callback(null);
-		});
+	// CATEGORIZE
+	categorize(text) {
+		return this.classifier.categorize(text);
 	}
 
 	// SAVE
 	save(callback) {
-		// serialize NN
-		var raw = this.network.toJSON();
+		const json = this.classifier.toJson();
+		const packed = msgpack.pack(json);
 
-		// create a messagepack buffer
-		var data = msgpack.pack(raw);
-
-		// store the data into a filename
-		fs.writeFile("classifier-" + this.name + ".dat", data, callback);
-	}
-
-	// PREPARE
-	prepare(input) {
-		// tokenize input string
-		var tokens = this.tokenizer.tokenize(input, 4);
-
-		// map each string to a lookup index
-		return tokens.map(t => {
-			return this.lookup.add(t);
+		zlib.deflate(packed, (err, zipped) => {
+			fs.writeFile("classifier.msgpack.zip", zipped, "utf8", err => {
+				if (err) callback(err);
+				else callback(null, true);
+			});
 		});
 	}
 
-	// TRAIN
-	train(input, category) {
-		// train the NN
-		this.trainer.train([
-			{
-				input: this.prepare(input),
-				output: [category]
-			}
-		]);
-	}
+	// LOAD
+	load(callback) {
+		// if stored version of the classifer exists, load this one
+		fs.readFile("classifier.msgpack.zip", (err, file) => {
+			if (err || !file) return callback(err);
 
-	// CLASSIFY
-	classify(input) {
-		return this.network.activate(this.prepare(input));
+			// unzip content
+			zlib.inflate(file, (err, unzipped) => {
+				if (err) return callback(err);
+
+				// un-msgpack the content
+				const unmsgpacked = msgpack.unpack(unzipped);
+
+				this.classifier = bayes.fromJson(unmsgpacked);
+				this.classifier.tokenizer = new Tokenizer().tokenize;
+
+				return callback(null, true);
+			});
+		});
 	}
 };
