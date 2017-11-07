@@ -8,7 +8,7 @@ var classifier;
 // LOOKUP
 describe("classifier", () => {
 	it("initialize a classifier", done => {
-		classifier = new Classifier();
+		classifier = new Classifier("test");
 
 		classifier.should.not.equal(null);
 		return done();
@@ -40,11 +40,8 @@ describe("classifier", () => {
 	});
 
 	it("should load the trained model from a zip file", done => {
-		classifier.load((err, success) => {
-			success.should.equal(true);
-
-			return done();
-		});
+		classifier.load();
+		return done();
 	});
 
 	it("should still categorize correctly", done => {

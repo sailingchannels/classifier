@@ -8,7 +8,10 @@ const { Tokenizer } = require("./tokenizer");
 // CLASSIFIER
 exports.Classifier = class {
 	// CONSTRUCTOR
-	constructor() {
+	constructor(name) {
+		if (!name) throw "no name provided for classifier";
+
+		this.name = name;
 		this.classifier = bayes({
 			tokenizer: new Tokenizer().tokenize
 		});
@@ -33,30 +36,33 @@ exports.Classifier = class {
 		const packed = msgpack.pack(json);
 
 		zlib.deflate(packed, (err, zipped) => {
-			fs.writeFile("classifier.msgpack.zip", zipped, "utf8", err => {
-				if (err) callback(err);
-				else callback(null, true);
-			});
+			fs.writeFile(
+				this.name + "_classifier.msgpack.zip",
+				zipped,
+				"utf8",
+				err => {
+					if (err) callback(err);
+					else callback(null, true);
+				}
+			);
 		});
 	}
 
 	// LOAD
-	load(callback) {
+	load() {
 		// if stored version of the classifer exists, load this one
-		fs.readFile("classifier.msgpack.zip", (err, file) => {
-			if (err || !file) return callback(err);
+		fs.readFile(this.name + "_classifier.msgpack.zip", (err, file) => {
+			if (err || !file) throw "File not found";
 
 			// unzip content
 			zlib.inflate(file, (err, unzipped) => {
-				if (err) return callback(err);
+				if (err) throw "Could not unzip file";
 
 				// un-msgpack the content
 				const unmsgpacked = msgpack.unpack(unzipped);
 
 				this.classifier = bayes.fromJson(unmsgpacked);
 				this.classifier.tokenizer = new Tokenizer().tokenize;
-
-				return callback(null, true);
 			});
 		});
 	}
