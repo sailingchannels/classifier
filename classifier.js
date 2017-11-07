@@ -52,6 +52,8 @@ exports.Classifier = class {
 	load() {
 		// if stored version of the classifer exists, load this one
 		fs.readFile(this.name + "_classifier.msgpack.zip", (err, file) => {
+			// end function here, because file is not available,
+			// so we don't want to load anything further from that file
 			if (err || !file) return;
 
 			// unzip content
