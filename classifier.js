@@ -41,8 +41,10 @@ exports.Classifier = class {
 				zipped,
 				"utf8",
 				err => {
-					if (err) callback(err);
-					else callback(null, true);
+					if (callback) {
+						if (err) callback(err);
+						else callback(null, true);
+					}
 				}
 			);
 		});

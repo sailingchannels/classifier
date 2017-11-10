@@ -1,9 +1,11 @@
 const restify = require("restify");
+
 const { Classifier } = require("./classifier");
+var classifiers = {};
 
 // init server
 const server = restify.createServer();
-var classifiers = {};
+server.use(restify.plugins.bodyParser());
 
 server.get("/", (req, res, next) => {
 	res.send("Sailing-Channels.com Classifier v1.0.0");
@@ -11,13 +13,15 @@ server.get("/", (req, res, next) => {
 
 // LEARN
 server.post("/learn", (req, res, next) => {
+	console.log(req.body);
 	if (
 		!req.body ||
 		!req.body.text ||
 		!req.body.category ||
-		!req.body.classfier
+		!req.body.classifier
 	) {
 		res.status(400);
+		res.send({});
 		return next();
 	}
 
@@ -37,26 +41,28 @@ server.post("/learn", (req, res, next) => {
 
 // CATEGORIZE
 server.post("/categorize", (req, res, next) => {
-	if (!req.body || !req.body.text) {
+	if (!req.body || !req.body.text || !req.body.classifier) {
 		res.status(400);
 		return next();
 	}
 
+	const name = req.body.classifier;
+
 	// create new classifier
-	if (!(req.body.classifier in classifiers)) {
+	if (!(name in classifiers)) {
 		res.status(500);
 		return next();
 	}
 
 	res.send({
-		category: classifier.categorize(req.body.text)
+		category: classifiers[name].categorize(req.body.text)
 	});
 
 	return next();
 });
 
 // listen to port 8080
-server.listen(8080, function() {
+server.listen(8080, "127.0.0.1", function() {
 	console.log("%s listening at %s", server.name, server.url);
 });
 
